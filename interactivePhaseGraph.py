@@ -56,7 +56,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
                value=110.0, id='fa3',
                tooltip={"placement": "bottom", "always_visible": True}),
     dcc.Markdown('$$𝜏_2/c_1$$', mathjax=True, style={'color':colors['text']}),
-    dcc.Slider(0.5, 4.0,
+    dcc.Slider(0.5, 2.5, step=0.125/2, updatemode='drag',
                marks={0.5: '0.5',
                       1.5: '1.5', 
                       3.5: '3.5'},
@@ -264,15 +264,6 @@ def updatePhaseGraph(fa1, fa2, fa3, tfrac):
     # viridis = cm.get_cmap('viridis', 256)
     cmap = cm.get_cmap('viridis', 256)
 
-    # plt.figure()
-    # for n in range(p1.size):
-    #     plt.plot([t1[n], t2[n]], [p1[n], p2[n]], '--' if isMz[n] else '-', color=viridis(np.abs(m[n])/np.max(np.abs(m))), marker='o', markersize=10)
-    # for n in range(p1.size):
-    #     if echoAtTime[n] is not None:
-    #         plt.plot(echoAtTime[n], 0.0, marker='*', markersize=10, color='r')
-    # plt.grid()
-    # plt.show()
-
     fig = make_subplots(rows=1, cols=1)
     for n in range(p1.size):
         x = np.array([t1[n], t2[n]])
@@ -282,14 +273,6 @@ def updatePhaseGraph(fa1, fa2, fa3, tfrac):
         color = '#%02x%02x%02x' % c
         fig.add_trace(go.Scatter(x=x, y=y, showlegend=False), row=1, col=1)
         fig['data'][-1]['line']['color'] = color
-
-    # fig.add_trace(go.Scatter(x=[None], y=[None], showlegend=False, marker=dict(
-    #                              colorscale='viridis', 
-    #                              showscale=True,
-    #                              cmin=0,
-    #                              cmax=1,
-    #                              color=colors['text'],
-    #                              colorbar=dict(thickness=12, tickvals=[0,1], ticktext=['0', 'M0'], outlinewidth=0))))
 
     for n in range(p1.size):
         if echoAtTime[n] > 0: 
