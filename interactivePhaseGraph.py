@@ -10,6 +10,188 @@ import time
 import numpy as np
 from matplotlib import cm
 
+def plotGraph1():
+
+    tau12 = 1.0 
+    tau23 = 1.5 
+    tau_post = 5.5 - tau12 - tau23
+    nseg = 20 
+    p1 = np.zeros((nseg,),dtype=np.float32) # phase at start of segment
+    p2 = np.zeros((nseg,),dtype=np.float32) # phase at end of segment
+    t1 = np.zeros((nseg,),dtype=np.float32) # time at beginning of segment
+    t2 = np.zeros((nseg,),dtype=np.float32) # time at end of segment
+    m = np.zeros((nseg,),dtype=np.complex64)
+    echoAtTime = [0] * nseg
+    isMz = [False] * nseg
+
+    # segment 0: FID from first RF pulse 
+    p1[0] = 0.0
+    p2[0] = tau12 
+    t1[0] = 0.0 
+    t2[0] = tau12 
+
+    # segment 1: fresh longitudinal magnetization 
+    p1[1] = 0.0 
+    p2[1] = 0.0
+    t1[1] = 0.0
+    t2[1] = tau12 
+
+    # segment 2: FID from segment 0 continues to dephase 
+    p1[2] = p2[0]
+    p2[2] = p1[2] + tau23 
+    t1[2] = tau12 
+    t2[2] = tau12 + tau23 
+
+    # segment 3: flip back of magnetization from segment 0 to z axis 
+    p1[3] = p2[0]
+    p2[3] = p2[0]
+    t1[3] = tau12 
+    t2[3] = tau12 + tau23 
+
+    # segment 4: new FID from second RF pulse acting on fresh Mz 
+    p1[4] = 0.0
+    p2[4] = tau23 
+    t1[4] = tau12 
+    t2[4] = tau12 + tau23 
+
+    # segment 5: fresh longitudinal magnetization remaining after second RF
+    p1[5] = 0.0
+    p2[5] = 0.0
+    t1[5] = tau12 
+    t2[5] = tau12 + tau23 
+
+    # segment 6: refocusing of magnetization from segment 0
+    p1[6] = -p2[0]
+    p2[6] = p1[6] + tau23 
+    t1[6] = tau12 
+    t2[6] = tau12 + tau23 
+
+    # segment 7: segment 2 continues to dephase after RF 3
+    p1[7] = p2[2]
+    p2[7] = p1[7] + tau_post 
+    t1[7] = tau12 + tau23 
+    t2[7] = tau12 + tau23 + tau_post 
+
+    # segment 8: segment 4 continues to dephase after RF 3
+    p1[8] = p2[4]
+    p2[8] = p1[8] + tau_post 
+    t1[8] = tau12 + tau23 
+    t2[8] = tau12 + tau23 + tau_post
+
+    # segment 9: segment 6 continues to dephase after RF 3
+    p1[9] = p2[6]
+    p2[9] = p1[9] + tau_post 
+    t1[9] = tau12 + tau23 
+    t2[9] = tau12 + tau23 + tau_post
+
+    # segment 10: FID of remaining fresh longitudinal magnetization from RF 3
+    p1[10] = 0.0
+    p2[10] = tau_post 
+    t1[10] = tau12 + tau23 
+    t2[10] = tau12 + tau23 + tau_post
+
+    # segment 11: refocusing of segment 6 via RF 3
+    p1[11] = -p2[6]
+    p2[11] = p1[11] + tau_post 
+    t1[11] = tau12 + tau23 
+    t2[11] = tau12 + tau23 + tau_post
+
+    # segment 12: RF 3 flipping portion of segment 2 back along longitudinal axis
+    p1[12] = p2[2]
+    p2[12] = p1[12]
+    t1[12] = tau12 + tau23 
+    t2[12] = tau12 + tau23 + tau_post
+
+    # segment 13: stimulated echo (tipping into transverse plane and refocusing the longitudinal magnetization in segment 3)
+    p1[13] = -p2[3]
+    p2[13] = p1[13] + tau_post 
+    t1[13] = tau12 + tau23 
+    t2[13] = tau12 + tau23 + tau_post
+
+    # segment 14: refocusing of segment 4 via RF 3 
+    p1[14] = -p2[4]
+    p2[14] = p1[14] + tau_post 
+    t1[14] = tau12 + tau23 
+    t2[14] = tau12 + tau23 + tau_post
+
+    # segment 15: flipping part of segment 4 back onto longitudinal axis via RF 3
+    p1[15] = p2[4] 
+    p2[15] = p1[15]
+    t1[15] = tau12 + tau23 
+    t2[15] = tau12 + tau23 + tau_post
+
+    # segment 16: refocusing of segment 2 via RF 3 
+    p1[16] = -p2[2]
+    p2[16] = p1[16] + tau_post 
+    t1[16] = tau12 + tau23 
+    t2[16] = tau12 + tau23 + tau_post
+
+    # segment 17: flipping back magnetization from segment 6 along longitudinal axis via RF 3
+    p1[17] = p2[6]
+    p2[17] = p1[17]
+    t1[17] = tau12 + tau23 
+    t2[17] = tau12 + tau23 + tau_post
+
+    # segment 18: remaining untouched longitudinal magnetization 
+    p1[18] = 0.0
+    p2[18] = 0.0
+    t1[18] = tau12 + tau23 
+    t2[18] = tau12 + tau23 + tau_post
+
+    # segment 19: Mz in segment 3 stays along longitudinal axis 
+    p1[19] = p2[3]
+    p2[19] = p1[19]
+    t1[19] = tau12 + tau23 
+    t2[19] = tau12 + tau23 + tau_post
+
+    cmap = cm.get_cmap('viridis', 256)
+
+    fig = make_subplots(rows=1, cols=1)
+    for n in range(p1.size):
+        x = np.array([t1[n], t2[n]])
+        y = np.array([p1[n], p2[n]])
+        c = cmap(1.0)
+        c = (int(c[0]*255.0), int(c[1]*255), int(c[2]*255))
+        color = '#%02x%02x%02x' % c
+        fig.add_trace(go.Scatter(x=x, y=y, showlegend=False), row=1, col=1)
+        fig['data'][-1]['line']['color'] = color
+    fig.update_traces(marker_size=10)
+    fig.update_layout(plot_bgcolor=colors['background'],paper_bgcolor=colors['background'],font=dict(family='times new roman',size=24))
+    fig.update_xaxes(color=colors['text'], showgrid=False)
+    fig.update_yaxes(color=colors['text'], showgrid=False)
+    fig.update_coloraxes(colorbar_tickcolor=colors['text'])
+
+    textangle = -8.0
+    fig.add_annotation(x=tau12/2, y=tau12/2,
+            text="sin(a)",
+            textangle=textangle,
+            font=dict(color=colors['text'],size=14),
+            showarrow=False,
+            yshift=10)
+    
+    fig.add_annotation(x=tau12/2, y=0,
+            text="cos(a)",
+            textangle=0.0,
+            font=dict(color=colors['text'],size=14),
+            showarrow=False,
+            yshift=-10)
+    
+    fig.add_annotation(x=tau12+tau23/2, y=tau12+tau23/2,
+            text="sin(a)*cos^2(a/2)",
+            textangle=textangle,
+            font=dict(color=colors['text'],size=14),
+            showarrow=False,
+            yshift=10)
+
+    fig.update_layout(
+    xaxis = dict(
+        tickmode = 'array',
+        tickvals = [tau12, tau12+tau23],
+        ticktext = ['𝜏1', '𝜏1 + 𝜏2']
+    ))
+
+    return fig
+
 colors = {
     'dark': True,
     'background': 'rgb(30,30,30)',
@@ -26,7 +208,23 @@ app = dash.Dash(__name__)
 
 # initialize the layout 
 app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
-    html.H1(children='Interactive Three-Pulse Phase Graph', style={'textAlign':'center', 'color':colors['text']}),
+    html.H1(children='NMR Phase Graphs', style={'textAlign':'center', 'color':colors['text']}),
+    dcc.Markdown('''
+                While students of NMR/MRI physics are quick to intuit the ability of an RF pulse to act as a 
+                refocusing pulse to reverse the phase of transverse magnetization to mitigate $$T_2$$, 
+                fully understanding the manner in which RF pulses maniuplate the magnetization is nontrivial. 
+                Each pulse acts on magnetization in one of four ways: \n
+                1. Tipping longitudinal magnetization into the transverse plane.
+                2. Flip a portion transverse magnetization back along the longitudinal axis (while preserving phase).
+                3. Refocus a portion of transverse magnetization.
+                4. Allow a portion of transverse magnetiztion to continue dephasing as it was before the RF pulse.
+                 
+                The proportion in which each of these actions occurs is heavily dependent on the flip angles and timing
+                of all applied RF pulses. The simplest pulse sequence that allows these effects to be investigated is that 
+                of three consecutive RF pulses. Even with only three pulses, the number of branches (or pathways) of magnetization 
+                can be formed is quite large with complex dependencies as seen below. 
+                ''', style={'color':colors['text'],'size': 24}, mathjax=True),
+    dcc.Graph(id='graph1', figure=plotGraph1()),
     dcc.Graph(id='phasegraph'),
     dcc.Markdown('Flip Angle 1', style={'color':colors['text']}),
     dcc.Slider(0,180,step=4,updatemode='drag',
@@ -63,6 +261,10 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},children=[
                value=1.5, id='time',
                tooltip={"placement": "bottom", "always_visible": True})
 ])
+
+
+
+
 
 # update the phase graph 
 @app.callback(
@@ -301,4 +503,4 @@ def updatePhaseGraph(fa1, fa2, fa3, tfrac):
 
 # Run app
 if __name__ == '__main__':
-    app.run_server(debug=False)
+    app.run_server(debug=True)
